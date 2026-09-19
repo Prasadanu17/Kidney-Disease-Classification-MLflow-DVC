@@ -2,9 +2,8 @@ artifacts_root: artifacts
 
 data_ingestion:
   root_dir: artifacts/data_ingestion
-  source_URL: https://drive.google.com/uc?id=1vlhZ5c7abUKF8xXERIw6m9Te8fW7ohw3
-  local_data_file: artifacts/data_ingestion/kidney-ct-scan-image.zip
-  unzip_dir: artifacts/data_ingestion
+  source_dir: research/Kidney-CT-Scan-data
+  local_data_file: artifacts/data_ingestion/Kidney-CT-Scan-data
 
 prepare_base_model:
   root_dir: artifacts/prepare_base_model
