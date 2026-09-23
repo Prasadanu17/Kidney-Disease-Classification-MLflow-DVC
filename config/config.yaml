@@ -3,7 +3,9 @@ artifacts_root: artifacts
 data_ingestion:
   root_dir: artifacts/data_ingestion
   source_dir: research/Kidney-CT-Scan-data
-  local_data_file: artifacts/data_ingestion/Kidney-CT-Scan-data
+  local_data_file: artifacts/data_ingestion/data.zip
+  unzip_dir: artifacts/data_ingestion
+
 
 prepare_base_model:
   root_dir: artifacts/prepare_base_model
