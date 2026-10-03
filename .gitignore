@@ -53,3 +53,5 @@ mlartifacts/
 
 # Python packaging
 __editable__*/
+
+artifacts/*
