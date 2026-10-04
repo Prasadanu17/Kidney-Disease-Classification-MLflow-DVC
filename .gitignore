@@ -43,6 +43,8 @@ mlartifacts/
 
 # DVC
 .dvc/cache/
+.dvc/tmp/
+.dvc/config.local
 
 # Logs
 *.log

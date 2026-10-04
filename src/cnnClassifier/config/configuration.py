@@ -11,7 +11,8 @@ from cnnClassifier.utils.common import (
 from cnnClassifier.entity.config_entity import (
     DataIngestionConfig,
     PrepareBaseModelConfig,
-    TrainingConfig
+    TrainingConfig,
+    EvaluationConfig
 )
 
 
@@ -103,3 +104,42 @@ class ConfigurationManager:
         )
 
         return training_config
+
+    def get_evaluation_config(self) -> EvaluationConfig:
+        import os
+        import configparser
+
+        create_directories(["artifacts/evaluation"])
+
+        # Auto-load DagsHub MLflow credentials from local DVC config if not in environment
+        if not os.environ.get("MLFLOW_TRACKING_USERNAME") or not os.environ.get("MLFLOW_TRACKING_PASSWORD"):
+            dvc_local = Path(".dvc/config.local")
+            if dvc_local.exists():
+                try:
+                    cp = configparser.ConfigParser()
+                    cp.read(dvc_local)
+                    for sec in cp.sections():
+                        if "remote" in sec and cp.has_option(sec, "user") and cp.has_option(sec, "password"):
+                            if not os.environ.get("MLFLOW_TRACKING_USERNAME"):
+                                os.environ["MLFLOW_TRACKING_USERNAME"] = cp.get(sec, "user").strip('\"\'')
+                            if not os.environ.get("MLFLOW_TRACKING_PASSWORD"):
+                                os.environ["MLFLOW_TRACKING_PASSWORD"] = cp.get(sec, "password").strip('\"\'')
+                            break
+                except Exception:
+                    pass
+
+        mlflow_uri = os.environ.get(
+            "MLFLOW_TRACKING_URI",
+            "https://dagshub.com/anu705545/Kidney-Disease-Classification-MLflow-DVC.mlflow"
+        )
+
+        eval_config = EvaluationConfig(
+            path_of_model=Path("artifacts/training/model.h5"),
+            training_data=Path("artifacts/data_ingestion/kidney-ct-scan-image"),
+            mlflow_uri=mlflow_uri,
+            all_params=self.params,
+            params_image_size=self.params.IMAGE_SIZE,
+            params_batch_size=self.params.BATCH_SIZE
+        )
+
+        return eval_config
