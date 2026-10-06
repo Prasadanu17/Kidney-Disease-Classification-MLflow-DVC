@@ -72,15 +72,14 @@ Export your DagsHub credentials as environment variables so MLflow can authentic
 **Linux / macOS:**
 ```bash
 export MLFLOW_TRACKING_URI=https://dagshub.com/anu705545/Kidney-Disease-Classification-MLflow-DVC.mlflow
-export MLFLOW_TRACKING_USERNAME=anu705545
-export MLFLOW_TRACKING_PASSWORD=<your-dagshub-access-token>
+export MLFLOW_TRACKING_USERNAME=anu705545export MLFLOW_TRACKING_PASSWORD="<set-your-rotated-token-in-this-shell>"
 ```
 
 **Windows (PowerShell):**
 ```powershell
 $env:MLFLOW_TRACKING_URI = "https://dagshub.com/anu705545/Kidney-Disease-Classification-MLflow-DVC.mlflow"
 $env:MLFLOW_TRACKING_USERNAME = "anu705545"
-$env:MLFLOW_TRACKING_PASSWORD = "<your-dagshub-access-token>"
+$env:MLFLOW_TRACKING_PASSWORD = "<set-your-rotated-token-in-this-shell>"
 ```
 
 > **Tip:** You can find your DagsHub access token at **Settings → Access Tokens** on your DagsHub profile.
@@ -106,9 +105,19 @@ After running the pipeline, visit your DagsHub repository and click the **"Exper
 
 🔗 **Project on DagsHub:** [https://dagshub.com/anu705545/Kidney-Disease-Classification-MLflow-DVC](https://dagshub.com/anu705545/Kidney-Disease-Classification-MLflow-DVC)
 
+MLFLOW_TRACKING_URI="https://dagshub.com/anu705545/Kidney-Disease-Classification-MLflow-DVC.mlflow"
+MLFLOW_TRACKING_USERNAME="anu705545"export MLFLOW_TRACKING_PASSWORD="<set-your-rotated-token-in-this-shell>"
+---
+Run this to export as env variables:
+```bash
+ $env:MLFLOW_TRACKING_URI="https://dagshub.com/anu705545/Kidney-Disease-Classification-MLflow-DVC.mlflow"
+$env:MLFLOW_TRACKING_USERNAME="anu70554" $env:MLFLOW_TRACKING_PASSWORD = "<set-your-rotated-token-in-this-shell>"
+```
 ---
 
----
+> Security: a DagsHub access token was previously exposed. Revoke/rotate it immediately; do not save the replacement token in this repository.
+
+> Security: a DagsHub access token was previously exposed. Revoke/rotate it immediately; never save the replacement token in this repository.
 
 ### STEP 05 — Configure DVC Remote for DagsHub Storage
 
