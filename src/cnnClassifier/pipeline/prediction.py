@@ -8,27 +8,34 @@ import os
 class PredictionPipeline:
     def __init__(self, filename):
         self.filename = filename
+        self.model = None
+
+    def _load_model(self):
+        if self.model is None:
+            model_path = os.path.join("artifacts", "training", "model.h5")
+            # compile=False avoids Keras deserialization errors (e.g., reduction='auto')
+            self.model = load_model(model_path, compile=False)
+        return self.model
 
     def predict(self):
-        # Load trained model
-        model = load_model(os.path.join("artifacts", "training", "model.h5"))
+        model = self._load_model()
 
         imagename = self.filename
         test_image = image.load_img(imagename, target_size=(224, 224))
         test_image = image.img_to_array(test_image)
         test_image = np.expand_dims(test_image, axis=0)
 
-        # PREPROCESSING FIX: apply the same VGG16 preprocessing used at
-        # training time (preprocess_input) instead of raw pixel values.
-        # Previously this was missing entirely, causing a train/inference mismatch.
+        # PREPROCESSING: apply VGG16 preprocess_input for fine-tuned model
         test_image = preprocess_input(test_image)
 
-        result = np.argmax(model.predict(test_image), axis=1)
-        print(result)
+        preds = model.predict(test_image, verbose=0)
+        result = np.argmax(preds, axis=1)
+        conf = float(np.max(preds))
+        print(f"Prediction result: {result}, probabilities: {preds}")
 
         if result[0] == 1:
             prediction = "Tumor"
-            return [{"image": prediction}]
         else:
-            prediction = "No Tumor"
-            return [{"image": prediction}]
+            prediction = "Normal"
+
+        return [{"image": prediction, "confidence": round(conf * 100, 2)}]
