@@ -248,8 +248,111 @@ The Model Evaluation stage assesses the trained CNN classifier on the validation
 - **GitHub:** [Prasadanu17](https://github.com/Prasadanu17)
 - **DagsHub:** [anu705545](https://dagshub.com/anu705545)
 
-### DVC cmd
+### DVC Useful Commands
 
-1. dvc init
-2. dvc repro - It will run the dvc 
-3. dvc dag - It's show the graph
+```bash
+dvc init          # Initialize DVC in the repository
+dvc repro         # Reproduce the full DVC pipeline
+dvc dag           # Visualize the pipeline DAG dependency graph
+dvc status        # Check status of tracked stages and data
+```
+
+---
+
+## About MLflow & DVC
+
+* **MLflow:**
+  * Production-grade experiment tracking server
+  * Logs hyperparameters, metrics, and models
+  * Artifact storage and model registry integration via DagsHub
+* **DVC (Data Version Control):**
+  * Lightweight dataset and model versioning for reproducible pipelines
+  * Pipeline orchestration and dependency caching via `dvc.yaml`
+  * Seamless remote data synchronization with DagsHub storage
+
+---
+
+# AWS CI/CD Deployment with GitHub Actions
+
+### 1. Log in to AWS Console
+Sign in to your AWS management console at [https://aws.amazon.com](https://aws.amazon.com).
+
+### 2. Create IAM User for Deployment
+Create a dedicated IAM user with programmatic access (Access Key ID and Secret Access Key):
+
+**Required Permissions Policies:**
+1. `AmazonEC2ContainerRegistryFullAccess` — To push and pull Docker images to/from Amazon ECR.
+2. `AmazonEC2FullAccess` — To manage and run workloads on EC2 virtual machines.
+
+### 3. Create Amazon ECR Repository
+1. Navigate to **Elastic Container Registry (ECR)**.
+2. Create a private repository (e.g., `kidney-app`).
+3. Note your repository URI:
+   ```text
+   556771656148.dkr.ecr.ap-south-1.amazonaws.com/kidney-app
+   ```
+   * **ECR Login URI:** `556771656148.dkr.ecr.ap-south-1.amazonaws.com`
+   * **Repository Name:** `kidney-app`
+
+### 4. Launch Amazon EC2 Instance
+1. Launch an **Ubuntu Server** EC2 instance (e.g., `t2.medium` or `t3.medium`).
+2. Configure **Security Group** Inbound Rules:
+   * **SSH:** Port `22` (Source: Your IP or `0.0.0.0/0`)
+   * **Custom TCP:** Port `8080` (Source: `0.0.0.0/0` — for web application traffic)
+
+### 5. Install Docker on EC2
+Connect to your EC2 instance via SSH and run:
+
+```bash
+# Update packages
+sudo apt-get update -y
+sudo apt-get upgrade -y
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Configure Docker permissions for the ubuntu user
+sudo usermod -aG docker ubuntu
+newgrp docker
+```
+
+### 6. Configure EC2 as GitHub Self-Hosted Runner
+1. In your GitHub repository, navigate to:
+   **Settings** → **Actions** → **Runners** → **New self-hosted runner**.
+2. Select **OS:** `Linux` | **Architecture:** `x64`.
+3. Execute the commands provided by GitHub in your EC2 terminal:
+   ```bash
+   # Download the runner package
+   mkdir actions-runner && cd actions-runner
+   curl -o actions-runner-linux-x64-2.311.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.311.0/actions-runner-linux-x64-2.311.0.tar.gz
+   tar xzf ./actions-runner-linux-x64-2.311.0.tar.gz
+
+   # Configure the runner (follow prompt instructions)
+   ./config.sh --url https://github.com/Prasadanu17/Kidney-Disease-Classification-MLflow-DVC --token <RUNNER_TOKEN>
+
+   # Install and run as a system service (runs continuously in background)
+   sudo ./svc.sh install
+   sudo ./svc.sh start
+   ```
+
+### 7. Configure GitHub Repository Secrets
+Go to **Settings** → **Secrets and variables** → **Actions** → **New repository secret**, and add:
+
+| Secret Name | Value / Example |
+|---|---|
+| `AWS_ACCESS_KEY_ID` | `AKIAIOSFODNN7EXAMPLE` |
+| `AWS_SECRET_ACCESS_KEY` | `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY` |
+| `AWS_REGION` | `ap-south-1` |
+| `AWS_ECR_LOGIN_URI` | `556771656148.dkr.ecr.ap-south-1.amazonaws.com` |
+| `ECR_REPOSITORY_NAME` | `kidney-app` |
+
+### 8. Automated CI/CD Execution
+Once configured, any push to the `main` branch will automatically:
+1. Run **Continuous Integration** (linting and checks).
+2. Build the Docker container image and push it to **Amazon ECR**.
+3. Deploy onto the **EC2 instance** via the self-hosted runner, launching the container on port `8080`.
+4. The live application will be accessible at:
+   ```text
+   http://<EC2-PUBLIC-IP>:8080
+   ```
