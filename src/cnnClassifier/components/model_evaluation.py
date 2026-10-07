@@ -37,12 +37,11 @@ class Evaluation:
     # ------------------------------------------------------------------
 
     def _valid_generator(self):
-        """Build a validation ImageDataGenerator using the same 30 % split
-        that the research notebook uses for evaluation."""
+        """Build a validation generator using the training pipeline's 20% split."""
 
         datagenerator_kwargs = dict(
             rescale=1.0 / 255,
-            validation_split=0.30
+            validation_split=0.20
         )
         dataflow_kwargs = dict(
             target_size=self.config.params_image_size[:-1],  # (H, W)
