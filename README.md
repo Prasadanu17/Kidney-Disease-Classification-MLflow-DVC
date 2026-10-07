@@ -72,7 +72,8 @@ Export your DagsHub credentials as environment variables so MLflow can authentic
 **Linux / macOS:**
 ```bash
 export MLFLOW_TRACKING_URI=https://dagshub.com/anu705545/Kidney-Disease-Classification-MLflow-DVC.mlflow
-export MLFLOW_TRACKING_USERNAME=anu705545export MLFLOW_TRACKING_PASSWORD="<set-your-rotated-token-in-this-shell>"
+export MLFLOW_TRACKING_USERNAME=anu705545
+export MLFLOW_TRACKING_PASSWORD="<set-your-rotated-token-in-this-shell>"
 ```
 
 **Windows (PowerShell):**
@@ -106,7 +107,8 @@ After running the pipeline, visit your DagsHub repository and click the **"Exper
 🔗 **Project on DagsHub:** [https://dagshub.com/anu705545/Kidney-Disease-Classification-MLflow-DVC](https://dagshub.com/anu705545/Kidney-Disease-Classification-MLflow-DVC)
 
 MLFLOW_TRACKING_URI="https://dagshub.com/anu705545/Kidney-Disease-Classification-MLflow-DVC.mlflow"
-MLFLOW_TRACKING_USERNAME="anu705545"export MLFLOW_TRACKING_PASSWORD="<set-your-rotated-token-in-this-shell>"
+MLFLOW_TRACKING_USERNAME="anu705545"
+export MLFLOW_TRACKING_PASSWORD="<set-your-rotated-token-in-this-shell>"
 ---
 Run this to export as env variables:
 ```bash
@@ -245,3 +247,9 @@ The Model Evaluation stage assesses the trained CNN classifier on the validation
 
 - **GitHub:** [Prasadanu17](https://github.com/Prasadanu17)
 - **DagsHub:** [anu705545](https://dagshub.com/anu705545)
+
+### DVC cmd
+
+1. dvc init
+2. dvc repro - It will run the dvc 
+3. dvc dag - It's show the graph
