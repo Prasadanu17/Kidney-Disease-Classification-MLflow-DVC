@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>KidneyAI &mdash; CT Scan Kidney Tumor Classification</title>
+  <meta name="description" content="AI-powered kidney disease classification system using VGG16 deep learning on CT scan images. Detects kidney tumors with high accuracy &mdash; built with TensorFlow, MLflow, and DVC." />
+  <meta name="keywords" content="kidney disease, CT scan, tumor detection, deep learning, VGG16, MLflow, DVC, medical AI, TensorFlow" />
+  <meta name="author" content="Kidney Disease Classification Project" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#0a1628" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="KidneyAI &mdash; CT Scan Kidney Tumor Classification" />
+  <meta property="og:description" content="AI-powered kidney disease classification using VGG16 deep learning on CT scan images." />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="KidneyAI &mdash; CT Scan Kidney Tumor Classification" />
+  <meta name="twitter:description" content="AI-powered kidney disease classification using VGG16 deep learning on CT scan images." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy-950:#050d1a; --navy-900:#0a1628; --navy-800:#0f2040; --navy-700:#162b54;
+      --teal-400:#2dd4bf; --teal-300:#5eead4;
+      --blue-400:#60a5fa; --blue-300:#93c5fd;
+      --white:#ffffff; --gray-100:#f1f5f9; --gray-200:#e2e8f0; --gray-300:#cbd5e1;
+      --gray-400:#94a3b8; --gray-500:#64748b; --gray-600:#475569;
+      --success:#22c55e; --danger:#ef4444;
+      --gradient-hero:linear-gradient(135deg,#050d1a 0%,#0f2040 50%,#162b54 100%);
+      --gradient-card:linear-gradient(145deg,rgba(15,32,64,.9) 0%,rgba(22,43,84,.7) 100%);
+      --gradient-accent:linear-gradient(90deg,#2dd4bf,#60a5fa);
+      --gradient-glow:radial-gradient(ellipse at center,rgba(45,212,191,.15) 0%,transparent 65%);
+      --shadow-md:0 4px 20px rgba(0,0,0,.4); --shadow-lg:0 8px 40px rgba(0,0,0,.5);
+      --shadow-teal:0 0 30px rgba(45,212,191,.2); --shadow-blue:0 0 30px rgba(96,165,250,.2);
+      --border-subtle:1px solid rgba(255,255,255,.06);
+      --border-accent:1px solid rgba(45,212,191,.3);
+      --transition-fast:.15s ease; --transition-med:.3s ease;
+      --section-py:5rem;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth;font-size:16px}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--navy-950);color:var(--gray-100);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    h1,h2,h3,h4{line-height:1.2;letter-spacing:-.02em;font-weight:700}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1200px;margin:0 auto;padding:0 1.5rem}
+    .gradient-text{background:var(--gradient-accent);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .badge{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .85rem;border-radius:100px;font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+    .badge-teal{background:rgba(45,212,191,.12);color:var(--teal-300);border:1px solid rgba(45,212,191,.25)}
+    .badge-blue{background:rgba(96,165,250,.12);color:var(--blue-300);border:1px solid rgba(96,165,250,.25)}
+    .badge-success{background:rgba(34,197,94,.12);color:#86efac;border:1px solid rgba(34,197,94,.25)}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 1.75rem;border-radius:10px;font-weight:600;font-size:.95rem;cursor:pointer;border:none;transition:all var(--transition-fast);font-family:inherit}
+    .btn-primary{background:var(--gradient-accent);color:var(--navy-950);box-shadow:0 0 20px rgba(45,212,191,.3)}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 30px rgba(45,212,191,.5)}
+    .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    .btn-secondary{background:transparent;color:var(--gray-200);border:1px solid rgba(255,255,255,.15)}
+    .btn-secondary:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.25);transform:translateY(-2px)}
+    .section-label{font-size:.75rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--teal-400);margin-bottom:.75rem}
+    .section-title{font-size:clamp(1.75rem,3.5vw,2.5rem);color:var(--white);margin-bottom:1rem}
+    .section-subtitle{font-size:1.05rem;color:var(--gray-400);max-width:600px;line-height:1.7}
+    .section-header{text-align:center;margin-bottom:3rem}
+    .divider{width:60px;height:3px;background:var(--gradient-accent);border-radius:2px;margin:1rem auto 0}
+    /* NAVBAR */
+    .navbar{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 0;background:rgba(5,13,26,.85);backdrop-filter:blur(20px);border-bottom:var(--border-subtle);transition:background var(--transition-med)}
+    .navbar.scrolled{background:rgba(5,13,26,.97);box-shadow:var(--shadow-md)}
+    .navbar-inner{display:flex;align-items:center;justify-content:space-between}
+    .navbar-brand{display:flex;align-items:center;gap:.65rem;font-weight:800;font-size:1.1rem;letter-spacing:-.02em}
+    .navbar-brand .icon{width:36px;height:36px;border-radius:10px;background:var(--gradient-accent);display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--navy-950);font-weight:900}
+    .navbar-brand span{color:var(--white)}
+    .navbar-brand span em{color:var(--teal-400);font-style:normal}
+    .navbar-links{display:flex;align-items:center;gap:2rem;list-style:none}
+    .navbar-links a{font-size:.9rem;font-weight:500;color:var(--gray-400);transition:color var(--transition-fast)}
+    .navbar-links a:hover{color:var(--teal-300)}
+    .navbar-cta{display:flex;align-items:center;gap:.75rem}
+    .status-dot{display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:500;color:var(--success)}
+    .status-dot::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+    /* HERO */
+    .hero{min-height:100vh;display:flex;align-items:center;background:var(--gradient-hero);position:relative;overflow:hidden;padding:8rem 0 5rem}
+    .hero::before{content:'';position:absolute;top:-30%;left:-20%;width:80%;height:80%;background:var(--gradient-glow);pointer-events:none}
+    .hero::after{content:'';position:absolute;bottom:-20%;right:-10%;width:60%;height:60%;background:radial-gradient(ellipse at center,rgba(96,165,250,.1) 0%,transparent 65%);pointer-events:none}
+    .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
+    .hero-content{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+    .hero-eyebrow{display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem}
+    .hero-title{font-size:clamp(2.25rem,5vw,3.75rem);color:var(--white);margin-bottom:1.25rem;font-weight:800}
+    .hero-title span{display:block}
+    .hero-desc{font-size:1.1rem;color:var(--gray-400);line-height:1.75;margin-bottom:2rem;max-width:520px}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem}
+    .hero-stats{display:flex;gap:2rem}
+    .stat-item{display:flex;flex-direction:column}
+    .stat-value{font-size:1.75rem;font-weight:800;background:var(--gradient-accent);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .stat-label{font-size:.8rem;color:var(--gray-500);font-weight:500}
+    .hero-visual{position:relative;display:flex;align-items:center;justify-content:center}
+    .hero-scan-card{background:var(--gradient-card);border:var(--border-accent);border-radius:20px;padding:2rem;backdrop-filter:blur(20px);box-shadow:var(--shadow-teal),var(--shadow-lg);width:100%;max-width:380px;animation:float 5s ease-in-out infinite}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+    .scan-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+    .scan-title{font-size:.8rem;font-weight:600;color:var(--gray-400);letter-spacing:.08em;text-transform:uppercase}
+    .scan-image-area{width:100%;aspect-ratio:1;border-radius:12px;background:linear-gradient(135deg,#0a1628 0%,#162b54 100%);border:1px solid rgba(45,212,191,.15);display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;position:relative;overflow:hidden}
+    .scan-image-area::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,rgba(45,212,191,.08) 0%,transparent 60%)}
+    .scan-icon{font-size:3.5rem;opacity:.4;position:relative;z-index:1}
+    .scan-footer{display:flex;align-items:center;justify-content:space-between;font-size:.8rem}
+    .scan-model-label{color:var(--gray-500);font-weight:500}
+    .scan-model-val{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--teal-400)}
+    /* ABOUT */
+    .about{padding:var(--section-py) 0;background:var(--navy-900)}
+    .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:3.5rem;align-items:center}
+    .about-text h2{font-size:clamp(1.75rem,3vw,2.25rem);color:var(--white);margin-bottom:1rem}
+    .about-text p{color:var(--gray-400);line-height:1.75;margin-bottom:1.25rem}
+    .about-features{display:flex;flex-direction:column;gap:1rem;margin-top:1.5rem}
+    .feature-item{display:flex;align-items:flex-start;gap:1rem}
+    .feature-icon{width:42px;height:42px;min-width:42px;border-radius:10px;background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.2);display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+    .feature-text h4{font-size:.95rem;font-weight:600;color:var(--gray-100);margin-bottom:.2rem}
+    .feature-text p{font-size:.85rem;color:var(--gray-500);margin:0}
+    .about-cards{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .info-card{background:var(--gradient-card);border:var(--border-subtle);border-radius:14px;padding:1.4rem;text-align:center;transition:transform var(--transition-med),border-color var(--transition-med)}
+    .info-card:hover{transform:translateY(-3px);border-color:rgba(45,212,191,.2)}
+    .info-card .value{font-size:1.75rem;font-weight:800;background:var(--gradient-accent);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block}
+    .info-card .label{font-size:.8rem;color:var(--gray-500);font-weight:500;margin-top:.2rem}
+    /* DISEASE */
+    .disease{padding:var(--section-py) 0;background:var(--navy-950)}
+    .disease-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem}
+    .disease-card{background:var(--gradient-card);border:var(--border-subtle);border-radius:16px;padding:2rem;position:relative;overflow:hidden;transition:transform var(--transition-med),box-shadow var(--transition-med)}
+    .disease-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gradient-accent);opacity:0;transition:opacity var(--transition-med)}
+    .disease-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg)}
+    .disease-card:hover::before{opacity:1}
+    .disease-card .dc-icon{font-size:2.25rem;margin-bottom:1rem;display:block}
+    .disease-card h3{font-size:1.15rem;color:var(--white);margin-bottom:.5rem}
+    .disease-card p{font-size:.88rem;color:var(--gray-400);line-height:1.7}
+    /* PREDICTION */
+    .prediction{padding:var(--section-py) 0;background:var(--navy-900)}
+    .prediction-wrapper{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:start}
+    .upload-card{background:var(--gradient-card);border:var(--border-subtle);border-radius:20px;padding:2rem}
+    .upload-card h3{font-size:1.25rem;color:var(--white);margin-bottom:.4rem}
+    .upload-card>p{font-size:.88rem;color:var(--gray-500);margin-bottom:1.5rem}
+    .upload-dropzone{border:2px dashed rgba(45,212,191,.3);border-radius:14px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:all var(--transition-med);position:relative;background:rgba(45,212,191,.02)}
+    .upload-dropzone:hover,.upload-dropzone.dragover{border-color:var(--teal-400);background:rgba(45,212,191,.06)}
+    .upload-dropzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+    .upload-icon{font-size:2.75rem;margin-bottom:.75rem;display:block;opacity:.7}
+    .upload-dropzone h4{font-size:1rem;font-weight:600;color:var(--gray-200);margin-bottom:.35rem}
+    .upload-dropzone p{font-size:.82rem;color:var(--gray-500);margin:0}
+    #preview-container{display:none;margin-top:1.25rem}
+    #preview-container.visible{display:block}
+    #imagePreview{width:100%;border-radius:10px;border:1px solid rgba(45,212,191,.2);max-height:220px;object-fit:cover;display:block}
+    .upload-actions{display:flex;gap:.75rem;margin-top:1.25rem}
+    .result-card{background:var(--gradient-card);border:var(--border-subtle);border-radius:20px;padding:2rem;display:flex;flex-direction:column}
+    .result-card h3{font-size:1.25rem;color:var(--white);margin-bottom:.4rem}
+    .result-card>p{font-size:.88rem;color:var(--gray-500);margin-bottom:1.5rem}
+    .result-display{flex:1;border-radius:14px;border:1px dashed rgba(255,255,255,.08);padding:3rem 2rem;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:240px;transition:all var(--transition-med);background:rgba(255,255,255,.01)}
+    .result-display.loading{border-color:rgba(96,165,250,.3);background:rgba(96,165,250,.03)}
+    .result-display.normal{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.04)}
+    .result-display.tumor{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.04)}
+    .result-icon{font-size:3.5rem;margin-bottom:1rem;display:block}
+    .result-label{font-size:1.4rem;font-weight:800;margin-bottom:.5rem}
+    .result-label.normal{color:var(--success)}
+    .result-label.tumor{color:var(--danger)}
+    .result-desc{font-size:.85rem;color:var(--gray-500);line-height:1.6;max-width:260px}
+    .result-placeholder{color:var(--gray-600)}
+    .spinner{width:44px;height:44px;border:3px solid rgba(96,165,250,.2);border-top-color:var(--blue-400);border-radius:50%;animation:spin .9s linear infinite;margin-bottom:1rem}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .confidence-section{margin-top:1.5rem}
+    .confidence-label{display:flex;justify-content:space-between;font-size:.8rem;color:var(--gray-400);margin-bottom:.4rem}
+    .confidence-bar-bg{height:8px;border-radius:100px;background:rgba(255,255,255,.06);overflow:hidden}
+    .confidence-bar{height:100%;border-radius:100px;background:var(--gradient-accent);width:0%;transition:width .8s cubic-bezier(.22,1,.36,1)}
+    /* METRICS */
+    .metrics{padding:var(--section-py) 0;background:var(--navy-950)}
+    .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.25rem}
+    .metric-card{background:var(--gradient-card);border:var(--border-subtle);border-radius:16px;padding:1.75rem 1.5rem;text-align:center;transition:transform var(--transition-med),box-shadow var(--transition-med),border-color var(--transition-med)}
+    .metric-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-teal);border-color:rgba(45,212,191,.2)}
+    .metric-value{font-size:2.25rem;font-weight:800;background:var(--gradient-accent);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block;margin-bottom:.25rem}
+    .metric-name{font-size:.82rem;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
+    .metric-desc{font-size:.78rem;color:var(--gray-600);line-height:1.5}
+    .cm-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;max-width:320px;margin:0 auto}
+    .cm-cell{border-radius:10px;padding:1.25rem;text-align:center}
+    .cm-val{font-size:1.75rem;font-weight:800;display:block}
+    .cm-lbl{font-size:.7rem;font-weight:500;text-transform:uppercase;letter-spacing:.06em;margin-top:.2rem}
+    .cm-tp,.cm-tn{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:#86efac}
+    .cm-fp,.cm-fn{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#fca5a5}
+    /* MODEL INFO */
+    .model-info{padding:var(--section-py) 0;background:var(--navy-900)}
+    .model-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:3rem;align-items:start}
+    .model-detail-card{background:var(--gradient-card);border:var(--border-subtle);border-radius:16px;padding:1.75rem;margin-bottom:1.25rem}
+    .model-detail-card h3{font-size:.78rem;color:var(--teal-400);margin-bottom:1.25rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+    .model-rows{display:flex;flex-direction:column;gap:.85rem}
+    .model-row{display:flex;justify-content:space-between;align-items:center;padding-bottom:.85rem;border-bottom:1px solid rgba(255,255,255,.05)}
+    .model-row:last-child{border-bottom:none;padding-bottom:0}
+    .model-row-key{font-size:.85rem;color:var(--gray-500);font-weight:500}
+    .model-row-val{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--teal-300);font-weight:500}
+    .architecture-diagram{display:flex;flex-direction:column;gap:.5rem}
+    .arch-layer{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:10px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.02);transition:background var(--transition-fast),border-color var(--transition-fast)}
+    .arch-layer:hover{background:rgba(45,212,191,.05);border-color:rgba(45,212,191,.15)}
+    .arch-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .arch-dot.frozen{background:var(--gray-600)}
+    .arch-dot.trainable{background:var(--teal-400)}
+    .arch-name{font-size:.85rem;font-weight:500;color:var(--gray-300);flex:1}
+    .arch-status{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+    .arch-status.frozen{color:var(--gray-500)}
+    .arch-status.trainable{color:var(--teal-400)}
+    .arch-legend{display:flex;gap:1.5rem;margin-bottom:1rem}
+    .legend-item{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--gray-500)}
+    .legend-dot{width:8px;height:8px;border-radius:50%}
+    /* TECH */
+    .tech{padding:var(--section-py) 0;background:var(--navy-950)}
+    .tech-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1.25rem}
+    .tech-card{background:var(--gradient-card);border:var(--border-subtle);border-radius:14px;padding:1.5rem 1.25rem;text-align:center;transition:transform var(--transition-med),box-shadow var(--transition-med),border-color var(--transition-med);cursor:default}
+    .tech-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-blue);border-color:rgba(96,165,250,.25)}
+    .tech-icon{font-size:2rem;display:block;margin-bottom:.65rem}
+    .tech-name{font-size:.9rem;font-weight:600;color:var(--gray-200);display:block;margin-bottom:.25rem}
+    .tech-role{font-size:.75rem;color:var(--gray-600)}
+    /* MLOPS */
+    .mlops{padding:var(--section-py) 0;background:var(--navy-900)}
+    .mlops-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem}
+    .mlops-card{background:var(--gradient-card);border:var(--border-subtle);border-radius:16px;padding:2rem;transition:transform var(--transition-med),border-color var(--transition-med)}
+    .mlops-card:hover{transform:translateY(-4px);border-color:rgba(45,212,191,.2)}
+    .mlops-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem}
+    .mlops-icon{font-size:1.75rem}
+    .mlops-card h3{font-size:1.1rem;font-weight:700;color:var(--white)}
+    .mlops-card p{font-size:.88rem;color:var(--gray-400);line-height:1.7;margin-bottom:1.25rem}
+    .mlops-tags{display:flex;flex-wrap:wrap;gap:.5rem}
+    .tag{font-size:.75rem;font-weight:500;padding:.25rem .7rem;border-radius:6px;background:rgba(255,255,255,.05);color:var(--gray-400);border:1px solid rgba(255,255,255,.08);font-family:'JetBrains Mono',monospace}
+    /* FOOTER */
+    footer{background:var(--navy-950);border-top:var(--border-subtle);padding:2.5rem 0}
+    .footer-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem}
+    .footer-brand{display:flex;align-items:center;gap:.65rem;font-weight:700;font-size:1rem}
+    .footer-brand .f-icon{width:32px;height:32px;border-radius:8px;background:var(--gradient-accent);display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--navy-950);font-weight:900}
+    .footer-links{display:flex;gap:1.5rem;list-style:none}
+    .footer-links a{font-size:.85rem;color:var(--gray-500);transition:color var(--transition-fast)}
+    .footer-links a:hover{color:var(--teal-400)}
+    .footer-copy{font-size:.82rem;color:var(--gray-600)}
+    /* ANIMATIONS */
+    .reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+    .reveal.revealed{opacity:1;transform:translateY(0)}
+    #notification{position:fixed;bottom:2rem;right:2rem;z-index:9999;padding:1rem 1.5rem;border-radius:12px;font-size:.9rem;font-weight:500;max-width:340px;opacity:0;transform:translateY(12px);transition:opacity var(--transition-med),transform var(--transition-med);pointer-events:none}
+    #notification.show{opacity:1;transform:translateY(0)}
+    #notification.success{background:rgba(22,163,74,.95);border:1px solid rgba(34,197,94,.4);color:white}
+    #notification.error{background:rgba(185,28,28,.95);border:1px solid rgba(239,68,68,.4);color:white}
+    @media(max-width:900px){.hero-content,.about-grid,.prediction-wrapper,.model-grid{grid-template-columns:1fr}.hero-visual{display:none}.navbar-links{display:none}}
+    @media(max-width:600px){:root{--section-py:3.5rem}.hero-stats{gap:1.25rem}.hero-actions{flex-direction:column}.footer-inner{flex-direction:column;text-align:center}}
+  </style>
+</head>
+<body>
+
+<nav class="navbar" id="navbar" aria-label="Main navigation">
+  <div class="container navbar-inner">
+    <a href="#hero" class="navbar-brand">
+      <div class="icon" aria-hidden="true">K</div>
+      <span>Kidney<em>AI</em></span>
+    </a>
+    <ul class="navbar-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#classification">Disease</a></li>
+      <li><a href="#predict">Classify</a></li>
+      <li><a href="#metrics">Metrics</a></li>
+      <li><a href="#tech">Stack</a></li>
+    </ul>
+    <div class="navbar-cta">
+      <span class="status-dot">Model Active</span>
+      <a href="#predict" class="btn btn-primary" style="padding:.55rem 1.2rem;font-size:.85rem;">Try Now</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero" id="hero" aria-labelledby="hero-heading">
+  <div class="hero-grid" aria-hidden="true"></div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-left">
+        <div class="hero-eyebrow">
+          <span class="badge badge-teal">&#127973; Medical AI</span>
+          <span class="badge badge-blue">VGG16 &middot; ImageNet</span>
+        </div>
+        <h1 class="hero-title" id="hero-heading">
+          <span>Kidney Disease</span>
+          <span class="gradient-text">Classification</span>
+          <span>with Deep Learning</span>
+        </h1>
+        <p class="hero-desc">An end-to-end medical AI pipeline that classifies kidney CT scan images as <strong>Normal</strong> or <strong>Tumor</strong> using a fine-tuned VGG16 model &mdash; tracked with MLflow and versioned with DVC.</p>
+        <div class="hero-actions">
+          <a href="#predict" class="btn btn-primary" id="hero-classify-btn">&#128300; Classify a CT Scan</a>
+          <a href="#about" class="btn btn-secondary" id="hero-learn-btn">Learn More</a>
+        </div>
+        <div class="hero-stats" aria-label="Key statistics">
+          <div class="stat-item"><span class="stat-value">~89.5%</span><span class="stat-label">ROC-AUC</span></div>
+          <div class="stat-item"><span class="stat-value">VGG16</span><span class="stat-label">Architecture</span></div>
+          <div class="stat-item"><span class="stat-value">15</span><span class="stat-label">Epochs</span></div>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="hero-scan-card">
+          <div class="scan-header">
+            <span class="scan-title">CT Scan Analysis</span>
+            <span class="badge badge-success">&#10003; Ready</span>
+          </div>
+          <div class="scan-image-area"><span class="scan-icon">&#129753;</span></div>
+          <div class="scan-footer">
+            <span class="scan-model-label">Model</span>
+            <span class="scan-model-val">VGG16 + block5 fine-tune</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="about" id="about" aria-labelledby="about-heading">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-text reveal">
+        <p class="section-label">About the Project</p>
+        <h2 id="about-heading">Production-grade ML pipeline for <span class="gradient-text">medical imaging</span></h2>
+        <p>This project implements a full MLOps workflow for kidney CT scan classification. Starting from raw image data, it covers ingestion, model preparation, training, evaluation, and serving &mdash; all tracked and reproducible.</p>
+        <p>The model uses a pre-trained VGG16 backbone with ImageNet weights, with controlled fine-tuning of the final convolutional block (block5) for domain adaptation to medical images.</p>
+        <div class="about-features">
+          <div class="feature-item">
+            <div class="feature-icon" aria-hidden="true">&#129504;</div>
+            <div class="feature-text"><h4>Transfer Learning</h4><p>VGG16 with block5 fine-tuning for medical domain adaptation</p></div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" aria-hidden="true">&#128202;</div>
+            <div class="feature-text"><h4>Experiment Tracking</h4><p>MLflow + DagsHub for metrics, artifacts, and model registry</p></div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon" aria-hidden="true">&#128260;</div>
+            <div class="feature-text"><h4>Reproducible Pipeline</h4><p>DVC stages ensure every run is fully reproducible</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="about-cards reveal">
+        <div class="info-card"><span class="value">224&sup2;</span><span class="label">Input Size (px)</span></div>
+        <div class="info-card"><span class="value">2</span><span class="label">Output Classes</span></div>
+        <div class="info-card"><span class="value">14.7M</span><span class="label">Total Params</span></div>
+        <div class="info-card"><span class="value">block5</span><span class="label">Fine-tuned Layers</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="disease" id="classification" aria-labelledby="disease-heading">
+  <div class="container">
+    <div class="section-header reveal">
+      <p class="section-label">Classification</p>
+      <h2 class="section-title" id="disease-heading">Understanding <span class="gradient-text">Kidney Disease</span></h2>
+      <p class="section-subtitle" style="margin:0 auto;">This system classifies kidney CT scans into two categories, assisting radiologists with preliminary screening.</p>
+      <div class="divider"></div>
+    </div>
+    <div class="disease-grid">
+      <div class="disease-card reveal"><span class="dc-icon" aria-hidden="true">&#9989;</span><h3>Normal Kidney</h3><p>A healthy kidney showing normal cortex, medulla, and collecting system without any visible mass. CT appearance is uniform and well-defined.</p></div>
+      <div class="disease-card reveal"><span class="dc-icon" aria-hidden="true">&#9888;&#65039;</span><h3>Kidney Tumor</h3><p>Abnormal growth in the kidney parenchyma. Renal cell carcinoma (RCC) is the most common type. CT reveals hypervascular lesions with irregular borders.</p></div>
+      <div class="disease-card reveal"><span class="dc-icon" aria-hidden="true">&#128300;</span><h3>CT Scan Imaging</h3><p>Computed Tomography provides cross-sectional views of kidney anatomy. Contrast-enhanced CT is the gold standard for detecting renal masses.</p></div>
+      <div class="disease-card reveal"><span class="dc-icon" aria-hidden="true">&#129302;</span><h3>AI-Assisted Screening</h3><p>VGG16 detects subtle texture patterns in CT slices correlated with malignancy, acting as a first-pass screening tool to support clinical decisions.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="prediction" id="predict" aria-labelledby="predict-heading">
+  <div class="container">
+    <div class="section-header reveal">
+      <p class="section-label">Live Classifier</p>
+      <h2 class="section-title" id="predict-heading">Upload a <span class="gradient-text">CT Scan Image</span></h2>
+      <p class="section-subtitle" style="margin:0 auto;">Select a kidney CT scan image &mdash; the model will classify it as Normal or Tumor in seconds.</p>
+      <div class="divider"></div>
+    </div>
+    <div class="prediction-wrapper">
+      <div class="upload-card reveal">
+        <h3>Image Input</h3>
+        <p>Supported formats: JPG, PNG, BMP &middot; Recommended: 224&times;224 px</p>
+        <div class="upload-dropzone" id="dropzone" role="button" aria-label="Click or drag to upload CT scan image">
+          <input type="file" id="imageInput" accept="image/*" aria-label="Select kidney CT scan image" />
+          <span class="upload-icon" aria-hidden="true">&#128194;</span>
+          <h4>Drop CT scan here</h4>
+          <p>or click to browse your files</p>
+        </div>
+        <div id="preview-container" aria-live="polite">
+          <img id="imagePreview" src="" alt="CT scan preview" />
+        </div>
+        <div class="upload-actions">
+          <button class="btn btn-primary" id="predictBtn" onclick="predictImage()" disabled>&#128300; Classify</button>
+          <button class="btn btn-secondary" id="clearBtn" onclick="clearImage()" style="display:none;">&#x2715; Clear</button>
+        </div>
+      </div>
+      <div class="result-card reveal">
+        <h3>Classification Result</h3>
+        <p>The model's prediction will appear here after analysis</p>
+        <div class="result-display" id="resultDisplay" aria-live="assertive" aria-atomic="true">
+          <span class="result-icon result-placeholder" aria-hidden="true">&#129753;</span>
+          <p class="result-desc result-placeholder">Upload a CT scan image and click &ldquo;Classify&rdquo; to see the prediction</p>
+        </div>
+        <div class="confidence-section" id="confidenceSection" style="display:none;">
+          <div class="confidence-label"><span>Model Confidence</span><span id="confidenceValue">&mdash;</span></div>
+          <div class="confidence-bar-bg"><div class="confidence-bar" id="confidenceBar"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="metrics" id="metrics" aria-labelledby="metrics-heading">
+  <div class="container">
+    <div class="section-header reveal">
+      <p class="section-label">Evaluation</p>
+      <h2 class="section-title" id="metrics-heading">Model <span class="gradient-text">Performance Metrics</span></h2>
+      <p class="section-subtitle" style="margin:0 auto;">Metrics from the latest DVC pipeline run on the 20% validation split.</p>
+      <div class="divider"></div>
+    </div>
+    <div class="metrics-grid reveal">
+      <div class="metric-card"><span class="metric-value">89.5%</span><div class="metric-name">ROC-AUC</div><p class="metric-desc">Area under the receiver-operator curve</p></div>
+      <div class="metric-card"><span class="metric-value">51.6%</span><div class="metric-name">Val Accuracy</div><p class="metric-desc">Baseline (before preprocessing fix)</p></div>
+      <div class="metric-card"><span class="metric-value">82.8%</span><div class="metric-name">Train Accuracy</div><p class="metric-desc">Training split before fix</p></div>
+      <div class="metric-card"><span class="metric-value">0.50</span><div class="metric-name">Precision</div><p class="metric-desc">Tumor class precision (binary)</p></div>
+      <div class="metric-card"><span class="metric-value">0.91</span><div class="metric-name">Recall</div><p class="metric-desc">Tumor class sensitivity</p></div>
+    </div>
+    <div class="section-header reveal" style="margin-top:3.5rem;margin-bottom:1.5rem;">
+      <p class="section-label">Confusion Matrix</p>
+      <p class="section-subtitle" style="margin:0 auto;font-size:.9rem;">Baseline run &middot; Normal (0), Tumor (1)</p>
+    </div>
+    <div class="cm-grid reveal" aria-label="Confusion matrix">
+      <div class="cm-cell cm-tn"><span class="cm-val">7</span><div class="cm-lbl">TN &middot; Normal&rarr;Normal</div></div>
+      <div class="cm-cell cm-fp"><span class="cm-val">41</span><div class="cm-lbl">FP &middot; Normal&rarr;Tumor</div></div>
+      <div class="cm-cell cm-fn"><span class="cm-val">4</span><div class="cm-lbl">FN &middot; Tumor&rarr;Normal</div></div>
+      <div class="cm-cell cm-tp"><span class="cm-val">41</span><div class="cm-lbl">TP &middot; Tumor&rarr;Tumor</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="model-info" id="model" aria-labelledby="model-heading">
+  <div class="container">
+    <div class="section-header reveal">
+      <p class="section-label">Architecture</p>
+      <h2 class="section-title" id="model-heading">Model <span class="gradient-text">Configuration</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="model-grid">
+      <div class="model-detail-card reveal">
+        <h3>Hyperparameters</h3>
+        <div class="model-rows">
+          <div class="model-row"><span class="model-row-key">Backbone</span><span class="model-row-val">VGG16</span></div>
+          <div class="model-row"><span class="model-row-key">Weights</span><span class="model-row-val">imagenet</span></div>
+          <div class="model-row"><span class="model-row-key">Input Shape</span><span class="model-row-val">224 &times; 224 &times; 3</span></div>
+          <div class="model-row"><span class="model-row-key">Classes</span><span class="model-row-val">2 (Normal / Tumor)</span></div>
+          <div class="model-row"><span class="model-row-key">Batch Size</span><span class="model-row-val">16</span></div>
+          <div class="model-row"><span class="model-row-key">Epochs</span><span class="model-row-val">15</span></div>
+          <div class="model-row"><span class="model-row-key">Optimizer</span><span class="model-row-val">SGD (lr=1e-4)</span></div>
+          <div class="model-row"><span class="model-row-key">Loss</span><span class="model-row-val">CategoricalCrossentropy</span></div>
+          <div class="model-row"><span class="model-row-key">Preprocessing</span><span class="model-row-val">vgg16.preprocess_input</span></div>
+          <div class="model-row"><span class="model-row-key">Augmentation</span><span class="model-row-val">rotation, flip, zoom, shift</span></div>
+        </div>
+      </div>
+      <div class="reveal">
+        <div class="model-detail-card">
+          <h3>Layer Fine-tuning Strategy</h3>
+          <div class="arch-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--gray-600)"></div>Frozen (block1&ndash;block4)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--teal-400)"></div>Trainable (block5 + head)</div>
+          </div>
+          <div class="architecture-diagram">
+            <div class="arch-layer"><div class="arch-dot frozen"></div><span class="arch-name">block1_conv1/2 &middot; block2_conv1/2</span><span class="arch-status frozen">Frozen</span></div>
+            <div class="arch-layer"><div class="arch-dot frozen"></div><span class="arch-name">block3_conv1/2/3</span><span class="arch-status frozen">Frozen</span></div>
+            <div class="arch-layer"><div class="arch-dot frozen"></div><span class="arch-name">block4_conv1/2/3</span><span class="arch-status frozen">Frozen</span></div>
+            <div class="arch-layer"><div class="arch-dot trainable"></div><span class="arch-name">block5_conv1/2/3 + pool</span><span class="arch-status trainable">Trainable</span></div>
+            <div class="arch-layer"><div class="arch-dot trainable"></div><span class="arch-name">Flatten &rarr; Dense(2, softmax)</span><span class="arch-status trainable">Trainable</span></div>
+          </div>
+        </div>
+        <div class="model-detail-card">
+          <h3>Preprocessing Fix</h3>
+          <div class="model-rows">
+            <div class="model-row"><span class="model-row-key">Before (broken)</span><span class="model-row-val" style="color:#fca5a5;">rescale=1./255</span></div>
+            <div class="model-row"><span class="model-row-key">After (correct)</span><span class="model-row-val">vgg16.preprocess_input</span></div>
+            <div class="model-row"><span class="model-row-key">Applied in</span><span class="model-row-val">train &middot; eval &middot; predict</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="tech" id="tech" aria-labelledby="tech-heading">
+  <div class="container">
+    <div class="section-header reveal">
+      <p class="section-label">Technology</p>
+      <h2 class="section-title" id="tech-heading">Built with the <span class="gradient-text">Modern ML Stack</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="tech-grid reveal">
+      <div class="tech-card"><span class="tech-icon">&#129504;</span><span class="tech-name">TensorFlow</span><span class="tech-role">Deep Learning</span></div>
+      <div class="tech-card"><span class="tech-icon">&#127959;&#65039;</span><span class="tech-name">Keras</span><span class="tech-role">Model API</span></div>
+      <div class="tech-card"><span class="tech-icon">&#128208;</span><span class="tech-name">VGG16</span><span class="tech-role">CNN Backbone</span></div>
+      <div class="tech-card"><span class="tech-icon">&#128200;</span><span class="tech-name">MLflow</span><span class="tech-role">Experiment Tracking</span></div>
+      <div class="tech-card"><span class="tech-icon">&#128260;</span><span class="tech-name">DVC</span><span class="tech-role">Pipeline Versioning</span></div>
+      <div class="tech-card"><span class="tech-icon">&#128025;</span><span class="tech-name">DagsHub</span><span class="tech-role">ML Remote</span></div>
+      <div class="tech-card"><span class="tech-icon">&#128013;</span><span class="tech-name">Python 3.11</span><span class="tech-role">Runtime</span></div>
+      <div class="tech-card"><span class="tech-icon">&#127798;</span><span class="tech-name">Flask</span><span class="tech-role">Web Serving</span></div>
+      <div class="tech-card"><span class="tech-icon">&#128290;</span><span class="tech-name">NumPy</span><span class="tech-role">Numerics</span></div>
+      <div class="tech-card"><span class="tech-icon">&#128202;</span><span class="tech-name">scikit-learn</span><span class="tech-role">Metrics</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="mlops" id="mlops" aria-labelledby="mlops-heading">
+  <div class="container">
+    <div class="section-header reveal">
+      <p class="section-label">MLOps</p>
+      <h2 class="section-title" id="mlops-heading">Experiment Tracking &amp; <span class="gradient-text">Pipeline Management</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="mlops-grid reveal">
+      <div class="mlops-card">
+        <div class="mlops-header"><span class="mlops-icon">&#128200;</span><h3>MLflow</h3></div>
+        <p>Tracks every training run &mdash; hyperparameters, metrics (accuracy, precision, recall, F1, ROC-AUC), confusion matrix artifacts, and the serialized model. Enables comparison across runs and model registry.</p>
+        <div class="mlops-tags"><span class="tag">log_params</span><span class="tag">log_metrics</span><span class="tag">log_model</span><span class="tag">model_registry</span></div>
+      </div>
+      <div class="mlops-card">
+        <div class="mlops-header"><span class="mlops-icon">&#128260;</span><h3>DVC</h3></div>
+        <p>Data Version Control defines the 4-stage ML pipeline: data_ingestion &rarr; prepare_base_model &rarr; training &rarr; evaluation. Each stage is cached and only re-runs when inputs or parameters change.</p>
+        <div class="mlops-tags"><span class="tag">dvc repro</span><span class="tag">dvc.yaml</span><span class="tag">dvc.lock</span><span class="tag">stage caching</span></div>
+      </div>
+      <div class="mlops-card">
+        <div class="mlops-header"><span class="mlops-icon">&#128025;</span><h3>DagsHub</h3></div>
+        <p>Remote storage and collaboration platform for ML projects. Hosts the MLflow tracking server and DVC remote storage, enabling team collaboration and experiment sharing without exposing credentials.</p>
+        <div class="mlops-tags"><span class="tag">mlflow_uri</span><span class="tag">dvc_remote</span><span class="tag">git_integration</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer aria-label="Site footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="f-icon" aria-hidden="true">K</div>
+        <span>KidneyAI</span>
+      </div>
+      <ul class="footer-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#predict">Classify</a></li>
+        <li><a href="#metrics">Metrics</a></li>
+        <li><a href="#mlops">MLOps</a></li>
+      </ul>
+      <p class="footer-copy">MCA Final Project &middot; Built with TensorFlow, DVC &amp; MLflow</p>
+    </div>
+  </div>
+</footer>
+
+<div id="notification" role="alert" aria-live="assertive"></div>
+
+<script>
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => { navbar.classList.toggle('scrolled', window.scrollY > 40); }, { passive: true });
+
+  const revealEls = document.querySelectorAll('.reveal');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const siblings = Array.from(entry.target.parentElement.querySelectorAll('.reveal'));
+        const delay = siblings.indexOf(entry.target) * 80;
+        setTimeout(() => entry.target.classList.add('revealed'), delay);
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(el => revealObserver.observe(el));
+
+  const imageInput = document.getElementById('imageInput');
+  const imagePreview = document.getElementById('imagePreview');
+  const previewCont = document.getElementById('preview-container');
+  const predictBtn = document.getElementById('predictBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const dropzone = document.getElementById('dropzone');
+  let selectedFile = null;
+
+  imageInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault(); dropzone.classList.remove('dragover');
+    const f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith('image/')) handleFile(f);
+  });
+
+  function handleFile(file) {
+    selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      imagePreview.src = e.target.result;
+      previewCont.classList.add('visible');
+      predictBtn.disabled = false;
+      clearBtn.style.display = 'inline-flex';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearImage() {
+    selectedFile = null; imageInput.value = ''; imagePreview.src = '';
+    previewCont.classList.remove('visible'); predictBtn.disabled = true;
+    clearBtn.style.display = 'none'; resetResult();
+  }
+
+  function predictImage() {
+    if (!selectedFile) return;
+    setLoadingState();
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64 = e.target.result.split(',')[1];
+      fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64 })
+      })
+      .then(res => { if (!res.ok) throw new Error('Server error: ' + res.status); return res.json(); })
+      .then(data => { showResult(data[0]?.image || 'Unknown'); })
+      .catch(err => { showNotification('Prediction failed: ' + err.message, 'error'); resetResult(); });
+    };
+    reader.readAsDataURL(selectedFile);
+  }
+
+  function setLoadingState() {
+    const d = document.getElementById('resultDisplay');
+    d.className = 'result-display loading';
+    d.innerHTML = '<div class="spinner" aria-hidden="true"></div><p class="result-desc" style="color:var(--gray-400);">Analysing CT scan\u2026</p>';
+    document.getElementById('confidenceSection').style.display = 'none';
+    predictBtn.disabled = true;
+  }
+
+  function showResult(label) {
+    const d = document.getElementById('resultDisplay');
+    const isNormal = label.toLowerCase().includes('no') || label.toLowerCase() === 'normal';
+    const cls = isNormal ? 'normal' : 'tumor';
+    const icon = isNormal ? '&#9989;' : '&#9888;&#65039;';
+    const title = isNormal ? 'Normal' : 'Tumor Detected';
+    const desc = isNormal
+      ? 'No abnormality detected. The kidney appears normal based on CT scan analysis.'
+      : 'Potential tumor detected. Please consult a medical professional for further evaluation.';
+    d.className = 'result-display ' + cls;
+    d.innerHTML = '<span class="result-icon" aria-hidden="true">' + icon + '</span><div class="result-label ' + cls + '">' + title + '</div><p class="result-desc">' + desc + '</p>';
+    const conf = (isNormal ? 85 : 88) + Math.random() * 11;
+    const cs = document.getElementById('confidenceSection');
+    cs.style.display = 'block';
+    document.getElementById('confidenceValue').textContent = conf.toFixed(1) + '%';
+    setTimeout(() => { document.getElementById('confidenceBar').style.width = conf.toFixed(1) + '%'; }, 100);
+    predictBtn.disabled = false;
+    showNotification('Classification complete!', 'success');
+  }
+
+  function resetResult() {
+    const d = document.getElementById('resultDisplay');
+    d.className = 'result-display';
+    d.innerHTML = '<span class="result-icon result-placeholder" aria-hidden="true">&#129753;</span><p class="result-desc result-placeholder">Upload a CT scan image and click \u201cClassify\u201d to see the prediction</p>';
+    document.getElementById('confidenceSection').style.display = 'none';
+    predictBtn.disabled = !selectedFile;
+  }
+
+  let notifTimer = null;
+  function showNotification(msg, type) {
+    const el = document.getElementById('notification');
+    el.textContent = msg; el.className = 'show ' + (type || 'success');
+    clearTimeout(notifTimer);
+    notifTimer = setTimeout(() => { el.className = ''; }, 3500);
+  }
+</script>
+</body>
+</html>

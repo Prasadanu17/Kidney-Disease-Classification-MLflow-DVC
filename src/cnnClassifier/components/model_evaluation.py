@@ -37,12 +37,17 @@ class Evaluation:
     # ------------------------------------------------------------------
 
     def _valid_generator(self):
-        """Build a validation generator using the training pipeline's 20% split."""
+        """Build a validation generator using the training pipeline's 20% split.
 
-        datagenerator_kwargs = dict(
-            rescale=1.0 / 255,
-            validation_split=0.20
-        )
+        PREPROCESSING FIX:
+        - Replaced rescale=1./255 with tf.keras.applications.vgg16.preprocess_input.
+        - VGG16 ImageNet weights expect BGR inputs with ImageNet channel means
+          subtracted, NOT [0,1]-normalised inputs.
+        - Using the same preprocessing_function here as in model_training.py
+          ensures evaluation metrics reflect true model performance on
+          correctly pre-processed data.
+        """
+
         dataflow_kwargs = dict(
             target_size=self.config.params_image_size[:-1],  # (H, W)
             batch_size=self.config.params_batch_size,
@@ -50,7 +55,8 @@ class Evaluation:
         )
 
         valid_datagenerator = tf.keras.preprocessing.image.ImageDataGenerator(
-            **datagenerator_kwargs
+            preprocessing_function=tf.keras.applications.vgg16.preprocess_input,
+            validation_split=0.20
         )
 
         self.valid_generator = valid_datagenerator.flow_from_directory(
